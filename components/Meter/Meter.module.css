@@ -1,0 +1,74 @@
+.meter {
+  display: grid;
+  grid-template-columns: 96px 1fr 88px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.78rem;
+  padding: 6px 0;
+}
+.label {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.track {
+  height: 10px;
+  background: var(--navy-3);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+  border-radius: 5px;
+  transition: width 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.fill.low {
+  background: linear-gradient(90deg, #8a5a50 0%, var(--danger) 100%);
+}
+.num {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 6px;
+  opacity: 0;
+}
+.chip.up,
+.chip.down {
+  animation: chipIn 0.4s ease forwards;
+}
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.chip.up {
+  background: rgba(143, 191, 159, 0.15);
+  color: var(--ok);
+}
+.chip.down {
+  background: rgba(201, 122, 110, 0.15);
+  color: var(--danger);
+}
+
+@media (max-width: 520px) {
+  .meter {
+    grid-template-columns: 82px 1fr 78px;
+    gap: 8px;
+  }
+}

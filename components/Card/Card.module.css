@@ -1,0 +1,27 @@
+.card {
+  background: linear-gradient(180deg, var(--navy-2) 0%, #0c1d33 100%);
+  border: 1px solid var(--gold-dim);
+  border-radius: 12px;
+  padding: 0;
+  margin-top: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.card:hover {
+  border-color: rgba(227, 198, 102, 0.45);
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.45),
+    0 0 35px rgba(201, 162, 39, 0.05);
+}
+.cardBody {
+  padding: 24px 26px 26px;
+}
+
+@media (max-width: 520px) {
+  .cardBody {
+    padding: 20px 18px 22px;
+  }
+}

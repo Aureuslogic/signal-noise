@@ -1,0 +1,63 @@
+.scoreboard {
+  position: relative;
+  overflow: hidden;
+  background: rgba(9, 22, 39, 0.75);
+  border: 1px solid var(--gold-dim);
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  margin-bottom: 16px;
+}
+.scoreboard::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -35%;
+  width: 25%;
+  background: linear-gradient(90deg, transparent, rgba(227, 198, 102, 0.035), transparent);
+  transform: skewX(-16deg);
+  animation: scan 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes scan {
+  50%,
+  100% {
+    left: 125%;
+  }
+}
+
+.scoreboardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.scoreboardTitle {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.playerRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.scoreboardPlayer {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.scoreboardPlayer b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.meterKey {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 10px;
+  line-height: 1.5;
+  border-top: 1px solid rgba(147, 167, 191, 0.15);
+  padding-top: 9px;
+}
+.meterKey b {
+  color: var(--gold-light);
+  font-weight: 600;
+}

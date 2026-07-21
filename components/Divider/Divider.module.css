@@ -1,0 +1,7 @@
+.rule {
+  height: 2px;
+  width: 64px;
+  background: var(--gold);
+  margin: 20px 0;
+  border: none;
+}

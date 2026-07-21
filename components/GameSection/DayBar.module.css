@@ -1,0 +1,27 @@
+.daybar {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+.day {
+  flex: 1;
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 7px 0;
+  border-bottom: 2px solid var(--navy-3);
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+.done {
+  color: var(--ink);
+  border-bottom-color: var(--gold-light);
+  opacity: 0.5;
+}

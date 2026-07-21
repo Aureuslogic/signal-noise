@@ -1,0 +1,27 @@
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 14px;
+  margin-bottom: 24px;
+}
+.brand {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.24em;
+  font-size: 0.95rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.brand span {
+  color: var(--ink);
+}
+.tagline {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

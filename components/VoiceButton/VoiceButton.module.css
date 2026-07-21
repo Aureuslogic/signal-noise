@@ -1,0 +1,19 @@
+.voiceBtn {
+  cursor: pointer;
+  background: rgba(201, 162, 39, 0.08);
+  color: var(--gold-light);
+  border: 1px solid var(--gold-dim);
+  border-radius: 16px;
+  padding: 5px 10px;
+  font: 600 0.68rem/1.2 inherit;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.voiceBtn[data-state="live"] {
+  color: var(--ok);
+  border-color: rgba(143, 191, 159, 0.4);
+}
+.voiceBtn[data-state="error"] {
+  color: var(--danger);
+  border-color: rgba(201, 122, 110, 0.4);
+}
