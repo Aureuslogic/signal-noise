@@ -25,7 +25,7 @@ export function IntroSection({ onStart }: IntroSectionProps) {
   return (
     <section>
       <h1 className={styles.title}>
-        Signal or <em>Noise</em>
+        Game Time
       </h1>
       <p className={styles.lede}>The Trading Week. A decision game from Aulteus Logic.</p>
       <Divider />
@@ -84,7 +84,7 @@ export function IntroSection({ onStart }: IntroSectionProps) {
             onChange={(event) => setVoiceEnabled(event.target.checked)}
           />
           <span>
-            Start the Vapi voice guide
+            Start the voice guide
             <small>
               A calm British male narrator will read the game aloud. Your microphone is muted after connection; you
               can turn the guide off at any time.
