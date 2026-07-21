@@ -60,7 +60,7 @@ export function LeadGateSection({ playerName, scores, onSubmit, onSkip }: LeadGa
       simulated_balance: String(Math.round(clampScore(scores.cap))),
       decision_discipline: String(Math.round(clampScore(scores.dis))),
       process_consistency: String(Math.round(clampScore(scores.edg))),
-      source: "Signal or Noise educational simulation",
+      source: "Game Time educational simulation",
     };
 
     let settled = false;

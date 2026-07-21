@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { VAPI_ASSISTANT_ID, VAPI_PUBLIC_KEY } from "@/lib/config";
 import type Vapi from "@vapi-ai/web";
 
@@ -9,11 +9,15 @@ export type VoiceState = "idle" | "live" | "error";
 const SPEECH_TIMEOUT_MS = 90_000;
 const CONNECT_TIMEOUT_MS = 15_000;
 const POST_SPEECH_DELAY_MS = 240;
+const RECONNECT_DELAY_MS = 180;
+const REPLACE_FALLBACK_MS = 700;
 
 /**
- * Drives the optional Vapi voice narrator: connects lazily on first use,
- * queues scene/debrief text so lines never overlap or get dropped mid-call,
- * and exposes just enough state to render the scoreboard's voice button.
+ * Drives the optional voice narrator: connects lazily on first use, and
+ * replaces (rather than queues behind) whatever is currently narrated so a
+ * new screen is never overlapped by stale speech from the previous one.
+ * Also silences narration outright when the tab is hidden, unloaded, or the
+ * player leaves the page.
  */
 export function useVapiNarration() {
   const [label, setLabel] = useState("Voice ready");
@@ -26,10 +30,13 @@ export function useVapiNarration() {
   const greetingFinishedRef = useRef(false);
   const shouldNarrateRef = useRef(false);
   const dispatchingRef = useRef(false);
+  const replacingSpeechRef = useRef(false);
   const currentSpeechRef = useRef("");
   const speechQueueRef = useRef<string[]>([]);
   const connectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const speechTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const startRef = useRef<() => Promise<void>>(async () => {});
 
   const setVoiceButton = useCallback((nextLabel: string, nextState: VoiceState) => {
     setLabel(nextLabel);
@@ -110,7 +117,10 @@ export function useVapiNarration() {
     });
 
     vapi.on("call-end", () => {
-      if (dispatchingRef.current && currentSpeechRef.current) {
+      // A screen change forced this call to end so it could reconnect with
+      // only the new screen's line queued - pick that reconnection back up.
+      const restartWithLatestPage = replacingSpeechRef.current && shouldNarrateRef.current && speechQueueRef.current.length > 0;
+      if (!replacingSpeechRef.current && dispatchingRef.current && currentSpeechRef.current) {
         speechQueueRef.current.unshift(currentSpeechRef.current);
       }
       connectedRef.current = false;
@@ -121,7 +131,15 @@ export function useVapiNarration() {
       greetingFinishedRef.current = false;
       dispatchingRef.current = false;
       currentSpeechRef.current = "";
+      replacingSpeechRef.current = false;
       setVoiceButton(shouldNarrateRef.current ? "Voice: reconnect" : "Voice off", shouldNarrateRef.current ? "error" : "idle");
+      if (restartWithLatestPage) {
+        setVoiceButton("Changing page…", "idle");
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = setTimeout(() => {
+          void startRef.current();
+        }, RECONNECT_DELAY_MS);
+      }
     });
 
     vapi.on("error", (error: unknown) => {
@@ -157,19 +175,67 @@ export function useVapiNarration() {
     }
   }, [loadVapi, setVoiceButton]);
 
-  const queueSpeech = useCallback(
+  useEffect(() => {
+    startRef.current = start;
+  }, [start]);
+
+  // Replaces whatever is queued or currently playing with just this line, so
+  // moving to a new decision, debrief, or results screen never overlaps with
+  // narration left over from the one before it.
+  const replaceSpeech = useCallback(
     (text: string) => {
       const clean = text.trim();
       if (!clean) return;
-      speechQueueRef.current.push(clean);
-      dispatchNextSpeech();
-      // If the call ended during a pause, the next narrated line reconnects it.
-      if (shouldNarrateRef.current && !connectedRef.current && !connectingRef.current) {
-        void start();
+
+      clearTimeout(speechTimerRef.current);
+      clearTimeout(reconnectTimerRef.current);
+      speechQueueRef.current = [clean];
+      speakingRef.current = false;
+      dispatchingRef.current = false;
+      currentSpeechRef.current = "";
+
+      if (!shouldNarrateRef.current) return;
+
+      if (vapiRef.current && (connectedRef.current || connectingRef.current)) {
+        // Ending the call is the dependable way to stop active assistant audio;
+        // reconnecting with only the current screen queued prevents stale narration.
+        replacingSpeechRef.current = true;
+        connectedRef.current = false;
+        connectingRef.current = false;
+        setVoiceButton("Changing page…", "idle");
+        vapiRef.current.stop();
+        // Fallback for browsers that omit call-end after a rapid screen change.
+        reconnectTimerRef.current = setTimeout(() => {
+          if (!replacingSpeechRef.current) return;
+          replacingSpeechRef.current = false;
+          void start();
+        }, REPLACE_FALLBACK_MS);
+        return;
       }
+      void start();
     },
-    [dispatchNextSpeech, start],
+    [setVoiceButton, start],
   );
+
+  // Silences narration immediately: used for hard stops (leaving a screen
+  // with nothing new to say, hiding the tab, unloading the page) rather than
+  // replacement (moving to a screen that has something new to narrate).
+  const stopNarration = useCallback(() => {
+    shouldNarrateRef.current = false;
+    connectedRef.current = false;
+    connectingRef.current = false;
+    speakingRef.current = false;
+    greetingFinishedRef.current = false;
+    dispatchingRef.current = false;
+    replacingSpeechRef.current = false;
+    currentSpeechRef.current = "";
+    speechQueueRef.current = [];
+    clearTimeout(connectTimerRef.current);
+    clearTimeout(speechTimerRef.current);
+    clearTimeout(reconnectTimerRef.current);
+    vapiRef.current?.stop();
+    setVoiceButton("Voice off", "idle");
+  }, [setVoiceButton]);
 
   const toggle = useCallback(async () => {
     if ((connectedRef.current || connectingRef.current) && vapiRef.current) {
@@ -177,7 +243,9 @@ export function useVapiNarration() {
       connectingRef.current = false;
       clearTimeout(connectTimerRef.current);
       clearTimeout(speechTimerRef.current);
+      clearTimeout(reconnectTimerRef.current);
       speechQueueRef.current = [];
+      replacingSpeechRef.current = false;
       dispatchingRef.current = false;
       currentSpeechRef.current = "";
       vapiRef.current.stop();
@@ -187,5 +255,20 @@ export function useVapiNarration() {
     await start();
   }, [setVoiceButton, start]);
 
-  return { label, voiceState, start, toggle, queueSpeech };
+  // Never let narration continue after the player leaves or hides the page.
+  useEffect(() => {
+    const handleHiddenChange = () => {
+      if (document.hidden) stopNarration();
+    };
+    window.addEventListener("pagehide", stopNarration);
+    window.addEventListener("beforeunload", stopNarration);
+    document.addEventListener("visibilitychange", handleHiddenChange);
+    return () => {
+      window.removeEventListener("pagehide", stopNarration);
+      window.removeEventListener("beforeunload", stopNarration);
+      document.removeEventListener("visibilitychange", handleHiddenChange);
+    };
+  }, [stopNarration]);
+
+  return { label, voiceState, start, toggle, replaceSpeech, stopNarration };
 }

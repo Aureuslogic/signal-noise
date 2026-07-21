@@ -1,14 +1,3 @@
-/**
- * Lead capture webhook.
- *
- * To save lead-gate submissions to a Google Sheet:
- * 1. Create a Google Sheet with an Apps Script web app (a few minutes of setup).
- * 2. Paste the deployed web app URL below.
- * 3. Set ALLOW_SKIP to false if details must be provided before the result is shown.
- *
- * Leaving WEBHOOK_URL empty keeps the form fully functional; submissions just
- * aren't persisted anywhere.
- */
 export const WEBHOOK_URL = "";
 export const ALLOW_SKIP = true;
 
