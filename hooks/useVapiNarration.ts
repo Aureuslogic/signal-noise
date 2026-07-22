@@ -163,6 +163,26 @@ export function useVapiNarration() {
     if (connectedRef.current || connectingRef.current || stopInProgressRef.current) return;
     shouldNarrateRef.current = true;
     connectingRef.current = true;
+    setVoiceButton("Requesting mic…", "idle");
+
+    // Gate the call behind a granted microphone permission so a denial (or a
+    // bot with no real mic) never opens a live, silent call that still
+    // consumes a concurrency slot. This is a one-shot check: on denial we
+    // stop here rather than retrying automatically - the player has to
+    // explicitly ask again via the voice toggle.
+    let micProbe: MediaStream;
+    try {
+      micProbe = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+      shouldNarrateRef.current = false;
+      connectingRef.current = false;
+      console.error("Microphone permission was denied or unavailable", error);
+      setVoiceButton("Voice unavailable", "error");
+      return;
+    }
+    // Only probing for permission - Vapi opens its own stream for the call.
+    micProbe.getTracks().forEach((track) => track.stop());
+
     setVoiceButton("Connecting…", "idle");
     try {
       const client = await loadVapi();
