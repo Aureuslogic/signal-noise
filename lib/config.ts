@@ -1,4 +1,4 @@
-export const WEBHOOK_URL = "";
+export const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwghj_fMC9TwbAQ4a6HFKc0lXBhKPKCyLl11hzDDAb0EwoTtrKPdFzbTNJstcGXvfI8/exec";
 export const ALLOW_SKIP = true;
 
 export const VAPI_PUBLIC_KEY = "6e2fdc9a-d3aa-4ffa-93d2-354175b9e9c2";
